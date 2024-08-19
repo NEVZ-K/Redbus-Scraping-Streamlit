@@ -19,10 +19,15 @@ if 'select_destination' not in st.session_state:
     st.session_state.select_destination = "All"
 if 'select_star_rating' not in st.session_state:
     st.session_state.select_star_rating = "All"
+if 'select_route' not in st.session_state:
+    st.session_state.select_route = "All"
+if 'select_seat_availability' not in st.session_state:
+    st.session_state.select_seat_availability = "All"
 if 'select_price_min' not in st.session_state:
     st.session_state.select_price_min = int(bus_data["Price"].min())
 if 'select_price_max' not in st.session_state:
     st.session_state.select_price_max = int(bus_data["Price"].max())
+
 
 
 # LOGO image for the webpage
@@ -84,6 +89,8 @@ if nav_sbar == "Find Buses":
         st.session_state.select_boarding = "All"
         st.session_state.select_destination = "All"
         st.session_state.select_star_rating = "All"
+        st.session_state.select_route = "All"
+        st.session_state.select_seat_availability = "All"
         st.session_state.select_price_min = int(bus_data["Price"].min())
         st.session_state.select_price_max = int(bus_data["Price"].max())
 
@@ -103,23 +110,27 @@ if nav_sbar == "Find Buses":
         if st.session_state.select_star_rating != "All":
             filtered_data = filtered_data[filtered_data["Star_Rating"] >= int(st.session_state.select_star_rating)]
 
-        filtered_data = filtered_data[
-            (filtered_data["Price"] >= st.session_state.select_price_min) &
-            (filtered_data["Price"] <= st.session_state.select_price_max)
-        ]
+        if st.session_state.select_route != "All":
+            filtered_data = filtered_data[filtered_data["Route_Name"] == st.session_state.select_route]
+
+        if st.session_state.select_seat_availability != "All":
+            filtered_data = filtered_data[filtered_data["Seats_Available"] == st.session_state.select_seat_availability]
 
         bus_type_list = ["All"] + sorted(filtered_data["Bus_Type"].unique())
         star_rating_list = ["All"] + sorted(filtered_data["Star_Rating"].unique())
         boarding_list = ["All"] + sorted(filtered_data["Boarding"].unique())
         destination_list = ["All"] + sorted(filtered_data["Destination"].unique())
+        route_list = ["All"] + sorted(filtered_data["Route_Name"].unique())
+        seat_availability_list = ["All"] + sorted(filtered_data["Seats_Available"].unique())
 
-        return bus_type_list, star_rating_list, boarding_list, destination_list
+        return bus_type_list, star_rating_list, boarding_list, destination_list, route_list, seat_availability_list
 
-    bus_type_list, star_rating_list, boarding_list, destination_list = update_options()
+    bus_type_list, star_rating_list, boarding_list, destination_list, route_list, seat_availability_list = update_options()
 
     # Creating columns to add select boxes in one row
     sb, sd = st.columns(2)
     bt, sr = st.columns(2)
+    rt, sa = st.columns(2)
 
     # Select Boarding point and update destination list
     select_boarding = sb.selectbox(
@@ -157,6 +168,24 @@ if nav_sbar == "Find Buses":
         else 0
     )
 
+    # Select Route
+    select_route = rt.selectbox(
+        "Select Route",
+        route_list,
+        index=route_list.index(st.session_state.select_route)
+        if st.session_state.select_route in route_list
+        else 0
+    )
+
+    # Select Seat Availability
+    select_seat_availability = sa.selectbox(
+        "Select Seat Availability",
+        seat_availability_list,
+        index=seat_availability_list.index(st.session_state.select_seat_availability)
+        if st.session_state.select_seat_availability in seat_availability_list
+        else 0
+    )
+
     # Full-width price range slider
     select_price_min, select_price_max = st.slider(
         "Select Price Range",
@@ -170,6 +199,8 @@ if nav_sbar == "Find Buses":
     st.session_state.select_destination = select_destination
     st.session_state.select_bus_type = select_bus_type
     st.session_state.select_star_rating = select_star_rating
+    st.session_state.select_route = select_route
+    st.session_state.select_seat_availability = select_seat_availability
     st.session_state.select_price_min = select_price_min
     st.session_state.select_price_max = select_price_max
 
@@ -184,6 +215,10 @@ if nav_sbar == "Find Buses":
         filtered_data = filtered_data[filtered_data["Bus_Type"] == select_bus_type]
     if select_star_rating != "All":
         filtered_data = filtered_data[filtered_data["Star_Rating"] >= int(select_star_rating)]
+    if select_route != "All":
+        filtered_data = filtered_data[filtered_data["Route_Name"] == select_route]
+    if select_seat_availability != "All":
+        filtered_data = filtered_data[filtered_data["Seats_Available"] == select_seat_availability]
     filtered_data = filtered_data[
         (filtered_data["Price"] >= select_price_min) & 
         (filtered_data["Price"] <= select_price_max)
