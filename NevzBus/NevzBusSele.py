@@ -4,7 +4,6 @@ import pandas as pd
 # Load data from CSV
 @st.cache_data
 def data_load():
-    # Read the CSV file into a DataFrame
     bus_data = pd.read_csv("aa_rb_data.csv")
     return bus_data
 
@@ -24,59 +23,16 @@ if 'select_price_min' not in st.session_state:
 if 'select_price_max' not in st.session_state:
     st.session_state.select_price_max = int(bus_data["Price"].max())
 
+# Sidebar with navigation options
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "Select Bus"])
 
-# LOGO image for the webpage
-st.image("NevzBusLogo.png", width=750)
+if page == "Home":
+    st.title("This is home page")
+elif page == "Select Bus":
 
-nav_sbar = st.sidebar.radio(" ", ["Home", "Find Buses", "Bus Table"])  # Sidebar
-
-# Code for Home page
-if nav_sbar == "Home":
-    st.write("""**Streamlit Bus Data Application**
-
-**Overview**
-
-This Streamlit application allows users to view and filter bus data from the RedBus platform, enabling users to search and explore various bus options based on different criteria.
-
-**Features**
-
-1. **Home Page:**
-   - A simple introductory page with basic information about the application.
-
-2. **Find Buses:**
-   - **Filter by Boarding Point:** Choose the specific boarding point.
-   - **Filter by Destination:** Choose the specific Destination.
-   - **Filter by Bus Type:** Select the type of bus you are interested in (e.g., luxury, semi-luxury).
-   - **Filter by Star Rating:** Specify the minimum star rating for the bus service.
-   - **Filter by Price Range:** Set the price range for the bus tickets.
-   - After applying the filters, a table displays the filtered bus data, showing options that meet your criteria.
-
-3. **Bus Table:**
-   - View the entire bus dataset in a table, only 10 rows will be visible at once.
-   - Navigate through pages to see whole bus data.
-             
-
-**How to Use**
-
-1. **Navigate to the 'Find Buses' Page:**
-   - Use the filters on the sidebar to select your preferences.
-   - Click "Clear Filters" to reset the filter settings.
-   - View the filtered results in the main content area.
-
-2. **Navigate to the 'Bus Table' Page:**
-   - Select the page number to view a specific subset of the data.
-   - Browse through the paginated results to see different entries.
-
-
-**Contact**
-
-For any questions or issues, please contact **NEVZ-K** in github.
-
-Thank you for using the Streamlit Bus Data Application!
-""")
-    
-# Code for Find Buses Radio Button
-if nav_sbar == "Find Buses":
+    # LOGO image for the webpage
+    st.image("NevzBusLogo.png", width=750)
 
     # Clear Filters button
     if st.button("Clear Filters"):
@@ -190,18 +146,3 @@ if nav_sbar == "Find Buses":
     ]
 
     st.dataframe(filtered_data.reset_index(drop=True))
-
-
-# Code for Bus Table Radio Button
-if nav_sbar == "Bus Table":
-    page_size = 10
-    total_rows = len(bus_data)
-    pages = total_rows // page_size + (total_rows % page_size != 0)
-
-    sele, a, b, c, d = st.columns(5)
-    page = sele.number_input("Select Page Number", min_value=1, max_value=pages, step=1)
-
-    start_row = (page - 1) * page_size
-    end_row = start_row + page_size
-
-    st.dataframe(bus_data.iloc[start_row:end_row].reset_index(drop=True))
