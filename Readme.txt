@@ -1,7 +1,3 @@
-Here's a simplified and clearer version of the instructions:
-
----
-
 "Welcome to the Redbus Data Scraping Project with Selenium and Dynamic Filtering using Streamlit.
 
 1. First, ensure that you have installed all the required packages to run the code. 
@@ -13,5 +9,3 @@ Here's a simplified and clearer version of the instructions:
 4. The Streamlit app has been created based on this data. Note that the Streamlit app does not connect directly to the SQL database. Instead, it retrieves data from the `.csv` file where the SQL data is stored.
 
 Enjoy exploring the data and the Streamlit app!"
-
----
