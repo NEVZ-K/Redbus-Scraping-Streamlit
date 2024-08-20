@@ -256,6 +256,7 @@ if nav_sbar == "Find Buses":
 
 # Code for Bus Table Radio Button
 if nav_sbar == "Bus Table":
+    bus_data = bus_data.drop(columns=["ID"])
     # Setting only 10 rows per page
     page_size = 10
     # Getting the total number of rows
