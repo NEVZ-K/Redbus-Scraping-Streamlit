@@ -194,7 +194,7 @@ if nav_sbar == "Find Buses":
         value=(st.session_state.select_price_min, st.session_state.select_price_max)
     )
 
-    # Update session state
+    # Update session state so that if you navigate to other page the selected values stays the same
     st.session_state.select_boarding = select_boarding
     st.session_state.select_destination = select_destination
     st.session_state.select_bus_type = select_bus_type
@@ -229,14 +229,19 @@ if nav_sbar == "Find Buses":
 
 # Code for Bus Table Radio Button
 if nav_sbar == "Bus Table":
+    # Setting only 10 rows per page
     page_size = 10
+    # Getting the total number of rows
     total_rows = len(bus_data)
+    # Dividing the total number of rows with the rows per page to set the page nubers in number input
     pages = total_rows // page_size + (total_rows % page_size != 0)
 
+    # Splitting single column into 5 and using only the 1st one for the number input
     sele, a, b, c, d = st.columns(5)
     page = sele.number_input("Select Page Number", min_value=1, max_value=pages, step=1)
 
     start_row = (page - 1) * page_size
     end_row = start_row + page_size
 
+    # Showing datas in the dataframe
     st.dataframe(bus_data.iloc[start_row:end_row].reset_index(drop=True))
