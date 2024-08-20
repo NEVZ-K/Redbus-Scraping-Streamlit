@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Try Running the below code
-
-# In[1]:
-
-
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,9 +11,17 @@ route_links_l = []
 
 route_names_l = []
 
+boarding_point_l = []
+
+destination_l = []
+
+print(r"Default Location : D:\GitHub\Capstone Projects\RedBus Data Scrapping and Streamlit Application\RB_All_Govt_Bus_Route_Links.csv ")
+loc = input("Select the location and name to save the .CSV file")
+
 host_name = input("Enter your SQL host name (Default: localhost)")
 root_name = input("Enter your SQL root name (Default: root)")
 sql_password = input("Enter yourr SQL password (Default: 1234)")
+
 
 # Connect to the MySQL server
 mydb = pymysql.connect(
@@ -68,7 +68,7 @@ for i in range(1, num_sub_divs + 1):
         # Click on the second sub div - CLICKING ON EACH GOVT BUS PAGE IN PAGE 1
         sub_div.click()
         
-        # NAVIGATING TO THE SECOND PAGE
+        # NAVIGATING TO THE SECOND PAGE WHICH CONTAINS THE ROUTE LINKS FOR ONE STATE
 #_________________________________________________________________________________________________________________________
         
         try:
@@ -179,18 +179,27 @@ for i in range(1, num_sub_divs + 1):
         print(f"Error interacting with sub div {i}: {e}")
         
 # THE ABOVE CODES SCRAPPED ALL THE LINKS FROM ALL THE GOVT BUS LINKS 
-# THE BELOW CODE WILL SAVE THE SCRAPPED LINKS INTO A CSV FILE FOR FURTHER USE
 
+# THE BELOW CODE IS USED TO SPLIT THE BOARDING POINT AND DESTIANTION FROM THE ROUTE LINK NAME
+
+for route in route_names_l:
+    boarding, destination = route.split(" to ")
+    boarding_point_l.append(boarding)
+    destination_l.append(destination)
+
+# THE BELOW CODE WILL SAVE THE SCRAPPED LINKS INTO A CSV FILE FOR FURTHER USE
 try:
     print(f"Creating links list")
     # Create a DataFrame
     link_df = pd.DataFrame({
         'Serial Number': range(1, len(route_links_l) + 1),  # Auto-generated serial numbers
         'Route Link': route_links_l,  # Data from route_links_l
-        'Route Name': route_names_l   # Data from route_names_l
+        'Route Name': route_names_l,   # Data from route_names_l
+        'Boarding_point': boarding_point_l,
+        'Destination': destination_l
     })
 
-    link_df.to_csv(r"C:\Users\Dell\Desktop\Data Science\GUVI\Pandas files\RB_All_Govt_Bus_Route_Links.csv")
+    link_df.to_csv(loc)
     print(f"Links list created")
 
 except Exception as e:
@@ -204,10 +213,10 @@ try:
     
     print(f"Creating database")
     # Create the REDBUS_DB database
-    cursor.execute("CREATE DATABASE IF NOT EXISTS All_RedBus")
+    cursor.execute("CREATE DATABASE IF NOT EXISTS All_RedBus_db")
 
     # Use the REDBUS_DB database
-    cursor.execute("USE All_RedBus")
+    cursor.execute("USE All_RedBus_db")
 
     # Create a table with the specified columns and data types
     create_table_query = """
@@ -215,6 +224,8 @@ try:
         ID INT AUTO_INCREMENT PRIMARY KEY,
         Route_Name TEXT,
         Route_Link TEXT,
+        Boarding_Point TEXT,
+        Destination TEXT,
         Bus_Name TEXT,
         Bus_Type TEXT,
         Departing_Time TIME,
@@ -250,7 +261,7 @@ a = 0
 
 #-------------------------------------------------------------------------------------
 
-for urls in route_links_l:
+for li_num, urls in enumerate(route_links_l):
     try:
 
         a = a + 1
@@ -259,6 +270,10 @@ for urls in route_links_l:
 
         # URL of the website is taken from the list of URLs
         url = urls
+        # Boarding point of the present URL
+        boarding_point = boarding_point_l[li_num]
+        # Destination of the present URL
+        destination_point = destination_l[li_num]
 
         print(f"{a} : From : {urls}")
 
@@ -382,6 +397,12 @@ for urls in route_links_l:
 
                     # Fixed route link
                     route_link = url
+                    
+                    # Fixed Boarding Point
+                    boarding_name = boarding_point
+
+                    #Fixed Destination
+                    destination_name = destination_point
 
                     # Route name (combining start and destination places)
                     route_name = f"{start_place} to {destination_place}"
@@ -390,6 +411,8 @@ for urls in route_links_l:
                     bus_data.append([
                         route_name,
                         route_link,
+                        boarding_name,
+                        destination_name,
                         bus_name,
                         bus_type,
                         departing_time,
@@ -415,7 +438,7 @@ for urls in route_links_l:
         try:
 
             # Create a DataFrame
-            columns = ["Route_Name", "Route_Link", "Bus_Name", "Bus_Type", "Departing_Time", "Duration", "Reaching_Time", "Star_Rating", "Price", "Seats_Available"]
+            columns = ["Route_Name", "Route_Link", "Boarding_Point", "Destination", "Bus_Name", "Bus_Type", "Departing_Time", "Duration", "Reaching_Time", "Star_Rating", "Price", "Seats_Available"]
             bus_lis_df = pd.DataFrame(bus_data, columns=columns)
 
             # TILL HERE
@@ -426,8 +449,8 @@ for urls in route_links_l:
 
             # Insert DataFrame data into the table
             insert_query = """
-            INSERT INTO All_RB_data (Route_Name, Route_Link, Bus_Name, Bus_Type, Departing_Time, Duration, Reaching_Time, Star_Rating, Price, Seats_Available)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO All_RB_data (Route_Name, Route_Link, Boarding_Point, Destination, Bus_Name, Bus_Type, Departing_Time, Duration, Reaching_Time, Star_Rating, Price, Seats_Available)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
             """
 
             # Convert 'departing_time' and 'reaching_time' to time format for insertion
@@ -441,6 +464,8 @@ for urls in route_links_l:
                 cursor.execute(insert_query, (
                     row['Route_Name'],
                     row['Route_Link'],
+                    row['Boarding_Point'],
+                    row['Destination'],
                     row['Bus_Name'],
                     row['Bus_Type'],
                     row['Departing_Time'],
@@ -464,11 +489,28 @@ for urls in route_links_l:
     except Exception as e:
         print(f"Oops no buses found in the link : {urls}")
         pass       
-        
+
+#________________________________________________________________________________________________________________________________
+
+# SQL query to select all data from the table
+query = "SELECT * FROM All_RB_data"
+
+# Use pandas to execute the query and load the data into a DataFrame
+all_bus_data_df = pd.read_sql(query, mydb)
+
+# Path to save the CSV file
+csv_file_path = r"D:\GitHub\Capstone Projects\RedBus Data Scrapping and Streamlit Application\RB_All_Govt_Bus_Data.csv"
+
+# Save the DataFrame to a CSV file
+all_bus_data_df.to_csv(csv_file_path, index=False)
+#________________________________________________________________________________________________________________________________
+
+
 # Closign SQL connection
 cursor.close()
 mydb.close()
+
+print(f"Data successfully exported to {csv_file_path}")
 #________________________________________________________________________________________________________________________
 # Close the WebDriver
 driver.quit()
-
