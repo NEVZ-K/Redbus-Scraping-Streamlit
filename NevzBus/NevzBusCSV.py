@@ -114,7 +114,7 @@ if nav_sbar == "Find Buses":
             filtered_data = filtered_data[filtered_data["Route_Name"] == st.session_state.select_route]
 
         if st.session_state.select_seat_availability != "All":
-            filtered_data = filtered_data[filtered_data["Seats_Available"] == st.session_state.select_seat_availability]
+            filtered_data = filtered_data[filtered_data["Seats_Available"] >= st.session_state.select_seat_availability]
 
         bus_type_list = ["All"] + sorted(filtered_data["Bus_Type"].unique())
         star_rating_list = ["All"] + sorted(filtered_data["Star_Rating"].unique())
@@ -218,7 +218,7 @@ if nav_sbar == "Find Buses":
     if select_route != "All":
         filtered_data = filtered_data[filtered_data["Route_Name"] == select_route]
     if select_seat_availability != "All":
-        filtered_data = filtered_data[filtered_data["Seats_Available"] == select_seat_availability]
+        filtered_data = filtered_data[filtered_data["Seats_Available"] >= select_seat_availability]
     filtered_data = filtered_data[
         (filtered_data["Price"] >= select_price_min) & 
         (filtered_data["Price"] <= select_price_max)
