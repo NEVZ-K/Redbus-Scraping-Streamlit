@@ -39,7 +39,7 @@ cursor = mydb.cursor()
 driver = webdriver.Chrome()
 
 # URL of the webpage
-url = "https://www.redbus.in/"   # Replace with your actual URL
+url = "https://www.redbus.in/" 
 
 # Open the URL
 driver.get(url)
