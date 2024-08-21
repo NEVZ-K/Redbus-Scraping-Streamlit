@@ -10,23 +10,40 @@ def data_load():
 
 bus_data = data_load()
 
-# Initialize session state for filters
+# Initialize session state for filters to remember the widget selections while loading the page
+# Check if 'select_bus_type' key exists in session state; if not, initialize it with the value "All"
 if 'select_bus_type' not in st.session_state:
     st.session_state.select_bus_type = "All"
+
+# Check if 'select_boarding' key exists in session state; if not, initialize it with the value "All"
 if 'select_boarding' not in st.session_state:
     st.session_state.select_boarding = "All"
+
+# Check if 'select_destination' key exists in session state; if not, initialize it with the value "All"
 if 'select_destination' not in st.session_state:
     st.session_state.select_destination = "All"
+
+# Check if 'select_star_rating' key exists in session state; if not, initialize it with the value "All"
 if 'select_star_rating' not in st.session_state:
     st.session_state.select_star_rating = "All"
+
+# Check if 'select_route' key exists in session state; if not, initialize it with the value "All"
 if 'select_route' not in st.session_state:
     st.session_state.select_route = "All"
+
+# Check if 'select_seat_availability' key exists in session state; if not, initialize it with the value "All"
 if 'select_seat_availability' not in st.session_state:
     st.session_state.select_seat_availability = "All"
+
+# Check if 'select_price_min' key exists in session state; if not, initialize it with the minimum price from the dataset
 if 'select_price_min' not in st.session_state:
     st.session_state.select_price_min = int(bus_data["Price"].min())
+
+# Check if 'select_price_max' key exists in session state; if not, initialize it with the maximum price from the dataset
 if 'select_price_max' not in st.session_state:
     st.session_state.select_price_max = int(bus_data["Price"].max())
+    
+# Check if 'select_state_rtc' key exists in session state; if not, initialize it with the value "Select"
 if 'select_state_rtc' not in st.session_state:
     st.session_state.select_state_rtc = "Select"
 
@@ -88,6 +105,7 @@ if nav_sbar == "Find Buses":
     # Clear Filters button and Select State RTC select box
     clear_col, rtc_col = st.columns([2, 3])
     
+    # Code to clear the filters while pressing clear button
     if clear_col.button("Clear Filters"):
         st.session_state.select_bus_type = "All"
         st.session_state.select_boarding = "All"
@@ -99,6 +117,7 @@ if nav_sbar == "Find Buses":
         st.session_state.select_price_max = int(bus_data["Price"].max())
         st.session_state.select_state_rtc = "Select"
     
+    # Select State RTC dropdown with added "Select" option
     select_state_rtc = rtc_col.selectbox(
         "Select State RTC",
         ["Select"] + ["All"] + sorted(bus_data["Rtc_Name"].unique()),
@@ -110,33 +129,43 @@ if nav_sbar == "Find Buses":
     st.session_state.select_state_rtc = select_state_rtc
 
     if select_state_rtc == "Select":
-        st.write("**Select an RTC bus to continue**")
+        # Display message when "Select" is chosen and hide filters
+        st.write("**Select any State RTC bus to continue**")
     else:
         # Dynamically update select boxes based on current selections
         def update_options():
+            # Create a copy of the original data to apply filters
             filtered_data = bus_data.copy()
 
+            # Filter the data based on the selected boarding point
             if st.session_state.select_boarding != "All":
                 filtered_data = filtered_data[filtered_data["Boarding"] == st.session_state.select_boarding]
 
+             # Filter the data based on the selected destination
             if st.session_state.select_destination != "All":
                 filtered_data = filtered_data[filtered_data["Destination"] == st.session_state.select_destination]
 
+            # Filter the data based on the selected bus type
             if st.session_state.select_bus_type != "All":
                 filtered_data = filtered_data[filtered_data["Bus_Type"] == st.session_state.select_bus_type]
 
+            # Filter the data based on the selected star rating
             if st.session_state.select_star_rating != "All":
                 filtered_data = filtered_data[filtered_data["Star_Rating"] >= int(st.session_state.select_star_rating)]
 
+             # Filter the data based on the selected route
             if st.session_state.select_route != "All":
                 filtered_data = filtered_data[filtered_data["Route_Name"] == st.session_state.select_route]
 
+            # Filter the data based on the selected seat availability
             if st.session_state.select_seat_availability != "All":
                 filtered_data = filtered_data[filtered_data["Seats_Available"] >= st.session_state.select_seat_availability]
 
+            # Filter the data based on the selected RTC name
             if st.session_state.select_state_rtc != "All":
                 filtered_data = filtered_data[filtered_data["Rtc_Name"] == st.session_state.select_state_rtc]
 
+            # Create a list of unique data from the database, adding "All" as the first option and sorting the remaining values
             bus_type_list = ["All"] + sorted(filtered_data["Bus_Type"].unique())
             star_rating_list = ["All"] + sorted(filtered_data["Star_Rating"].unique())
             boarding_list = ["All"] + sorted(filtered_data["Boarding"].unique())
@@ -153,7 +182,7 @@ if nav_sbar == "Find Buses":
         bt, sr = st.columns(2)
         rt, sa = st.columns(2)
 
-        # Select Boarding point and update destination list
+        # Creating select box for boarding point and updating values in the session state based on selection
         select_boarding = sb.selectbox(
             "Select Boarding Point",
             boarding_list,
@@ -163,7 +192,7 @@ if nav_sbar == "Find Buses":
             on_change=lambda: st.session_state.update({'select_destination': 'All'})
         )
 
-        # Update the destination select box based on the selected boarding point
+        # # Creating select box for destination and updating values in the session state based on selection
         select_destination = sd.selectbox(
             "Select Destination Point",
             destination_list,
@@ -172,7 +201,7 @@ if nav_sbar == "Find Buses":
             else 0
         )
 
-        # Handle the index for default selections
+        # # Creating select box for bus_type and updating values in the session state based on selection
         select_bus_type = bt.selectbox(
             "Select Bus Type",
             bus_type_list,
@@ -181,6 +210,7 @@ if nav_sbar == "Find Buses":
             else 0
         )
 
+        # Creating select box for star Rating and updating values in the session state based on selection
         select_star_rating = sr.selectbox(
             "Select Star Rating",
             star_rating_list,
@@ -189,7 +219,7 @@ if nav_sbar == "Find Buses":
             else 0
         )
 
-        # Select Route
+        # Creating select box for route and updating values in the session state based on selection
         select_route = rt.selectbox(
             "Select Route",
             route_list,
@@ -198,7 +228,7 @@ if nav_sbar == "Find Buses":
             else 0
         )
 
-        # Select Seat Availability
+        # Creating select box for seat availablility and updating values in the session state based on selection
         select_seat_availability = sa.selectbox(
             "Select Seat Availability",
             seat_availability_list,
@@ -228,21 +258,31 @@ if nav_sbar == "Find Buses":
         # Re-filter the data based on final selections
         filtered_data = bus_data.copy()
 
+        # Filter the data based on the selected boarding point, if it's not set to "All"
         if select_boarding != "All":
             filtered_data = filtered_data[filtered_data["Boarding"] == select_boarding]
+        # Filter the data based on the selected destination, if it's not set to "All"
         if select_destination != "All":
             filtered_data = filtered_data[filtered_data["Destination"] == select_destination]
+        # Filter the data based on the selected bus type, if it's not set to "All"
         if select_bus_type != "All":
             filtered_data = filtered_data[filtered_data["Bus_Type"] == select_bus_type]
+        # Filter the data based on the selected star rating, if it's not set to "All"
+        # The rating should be greater than or equal to the selected rating
         if select_star_rating != "All":
             filtered_data = filtered_data[filtered_data["Star_Rating"] >= int(select_star_rating)]
+        # Filter the data based on the selected route, if it's not set to "All"
         if select_route != "All":
             filtered_data = filtered_data[filtered_data["Route_Name"] == select_route]
+        # Filter the data based on the selected seat availability, if it's not set to "All"
+        # The number of available seats should be greater than or equal to the selected availability
         if select_seat_availability != "All":
             filtered_data = filtered_data[filtered_data["Seats_Available"] >= select_seat_availability]
+        # Filter the data based on the selected RTC (State RTC) name, if it's not set to "All"
         if select_state_rtc != "All":
             filtered_data = filtered_data[filtered_data["Rtc_Name"] == select_state_rtc]
-        
+        # Filter the data based on the selected price range
+        # The price should be within the minimum and maximum selected values
         filtered_data = filtered_data[
             (filtered_data["Price"] >= select_price_min) & 
             (filtered_data["Price"] <= select_price_max)
