@@ -15,6 +15,8 @@ boarding_point_l = []
 
 destination_l = []
 
+state_l = []
+
 print(r"Default Location : D:\GitHub\Capstone Projects\RedBus Data Scrapping and Streamlit Application\RB_All_Govt_Bus_Route_Links.csv ")
 loc = input("Select the location and name to save the .CSV file")
 
@@ -64,6 +66,15 @@ for i in range(1, num_sub_divs + 1):
         # Scroll to the element to ensure it's visible - TO CLICK A LINK WE NEED TO BRING IT TO THE FOCUS
         actions = ActionChains(driver)
         actions.move_to_element(sub_div).perform()
+
+# The following code fetches the State Transport Corporation name from the website and adds it to the list
+#________________________________________________________________________________________________________________________________
+        state_bus = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//div[@id='Carousel']/div[{i}]")))
+
+        state_name = state_bus.find_element(By.CLASS_NAME, "rtcName").text
+
+        #print("The name of the state is : ",state_name)
+#________________________________________________________________________________________________________________________________
 
         # Click on the second sub div - CLICKING ON EACH GOVT BUS PAGE IN PAGE 1
         sub_div.click()
@@ -129,6 +140,8 @@ for i in range(1, num_sub_divs + 1):
                 
                         route_links_l.append(route_link)
 
+                        state_l.append(state_name)
+
                         # Going back to the original page and waiting to load all the div in the second page - LOADING THE MAIN DIV
                         WebDriverWait(driver, 20).until(
                             EC.presence_of_element_located((By.XPATH, "//div[@id='root']/div/div[4]"))
@@ -193,6 +206,7 @@ try:
     # Create a DataFrame
     link_df = pd.DataFrame({
         'Serial Number': range(1, len(route_links_l) + 1),  # Auto-generated serial numbers
+        'State_RTC': state_l, # Data from state_l
         'Route Link': route_links_l,  # Data from route_links_l
         'Route Name': route_names_l,   # Data from route_names_l
         'Boarding_point': boarding_point_l,
@@ -222,6 +236,7 @@ try:
     create_table_query = """
     CREATE TABLE IF NOT EXISTS All_RB_data (
         ID INT AUTO_INCREMENT PRIMARY KEY,
+        Rtc_Name TEXT,
         Route_Name TEXT,
         Route_Link TEXT,
         Boarding_Point TEXT,
@@ -274,6 +289,8 @@ for li_num, urls in enumerate(route_links_l):
         boarding_point = boarding_point_l[li_num]
         # Destination of the present URL
         destination_point = destination_l[li_num]
+        # State RTC name of the present URL
+        state_rtc = state_l[li_num]
 
         print(f"{a} : From : {urls}")
 
@@ -404,11 +421,15 @@ for li_num, urls in enumerate(route_links_l):
                     #Fixed Destination
                     destination_name = destination_point
 
+                    #RTC NAME
+                    rtc_name = state_rtc
+
                     # Route name (combining start and destination places)
                     route_name = f"{start_place} to {destination_place}"
 
                     # Append the extracted data to the list
                     bus_data.append([
+                        rtc_name,
                         route_name,
                         route_link,
                         boarding_name,
@@ -438,7 +459,7 @@ for li_num, urls in enumerate(route_links_l):
         try:
 
             # Create a DataFrame
-            columns = ["Route_Name", "Route_Link", "Boarding_Point", "Destination", "Bus_Name", "Bus_Type", "Departing_Time", "Duration", "Reaching_Time", "Star_Rating", "Price", "Seats_Available"]
+            columns = ["Rtc_Name", "Route_Name", "Route_Link", "Boarding_Point", "Destination", "Bus_Name", "Bus_Type", "Departing_Time", "Duration", "Reaching_Time", "Star_Rating", "Price", "Seats_Available"]
             bus_lis_df = pd.DataFrame(bus_data, columns=columns)
 
             # TILL HERE
@@ -449,8 +470,8 @@ for li_num, urls in enumerate(route_links_l):
 
             # Insert DataFrame data into the table
             insert_query = """
-            INSERT INTO All_RB_data (Route_Name, Route_Link, Boarding_Point, Destination, Bus_Name, Bus_Type, Departing_Time, Duration, Reaching_Time, Star_Rating, Price, Seats_Available)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
+            INSERT INTO All_RB_data (Rtc_Name, Route_Name, Route_Link, Boarding_Point, Destination, Bus_Name, Bus_Type, Departing_Time, Duration, Reaching_Time, Star_Rating, Price, Seats_Available)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
 
             # Convert 'departing_time' and 'reaching_time' to time format for insertion
@@ -462,6 +483,7 @@ for li_num, urls in enumerate(route_links_l):
             # Insert DataFrame data into the SQL table
             for index, row in bus_lis_df.iterrows():
                 cursor.execute(insert_query, (
+                    row['Rtc_Name'],
                     row['Route_Name'],
                     row['Route_Link'],
                     row['Boarding_Point'],
